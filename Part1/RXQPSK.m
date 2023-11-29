@@ -1,4 +1,5 @@
 clear all;
+close all;
 load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -35,7 +36,7 @@ spec_analysis(xBB,1/Ts)
 figure(2)
 hold on
 plot(xBBd,'b')
-plot(xBBd(1:L:end),'r.')
+plot(xBBd,'r.')
 axis('square')
 xlabel('real part')
 ylabel('imaginary part')
@@ -60,29 +61,27 @@ for n=starting:ending
 end
 plot(abs(ryy));
 
-epsilon=0.05;
-preamble_started=false;
-for n=1+N:length(ryy)
-    if preamble_started == false && abs(abs(ryy(n))- abs(ryy(n-N))) <= epsilon
-        preamble_started = true;
-        starting_point = n-N;
-    elseif preamble_started == true && abs(abs(ryy(n))- abs(ryy(n-N))) >= epsilon
-        end_point = n-N;
+figure(6);
+for i=1:length(xBBd)- N
+    xBBd_cp = xBBd(i:i+N-1);
+    rxx_curr = 0;
+    for k=1:N
+        rxx_curr = rxx_curr + xBBd_cp(k)*conj(cp(k));
     end
+    rxx(i) = rxx_curr;
 end
+plot(abs(rxx));
 
-payload=xBBd(end_point:end);
+payload=xBBd(106+31:end);
 figure(3)
 hold on
 plot(payload,'b')
-plot(payload,'r.')
+plot(payload,'xr')
 axis('square')
 xlabel('real part')
 ylabel('imaginary part')
 hold off
 
 info_bits = QPSK2bits(payload);
-info_bits_size = int2bit(length(info_bits), 32);
-binData = [info_bits_size; info_bits];
-data = bin2file(binData , 'Part1/Part1_Output.txt');
+data = bin2file(info_bits , 'Part1_Output.txt');
 

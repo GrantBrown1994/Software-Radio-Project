@@ -1,5 +1,10 @@
+close all;
 clear all;
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');
+load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
+% load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
+% load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
@@ -35,7 +40,6 @@ spec_analysis(xBB,1/Ts)
 figure(2)
 hold on
 plot(xBBd,'b')
-plot(xBBd(1:L:end),'r.')
 axis('square')
 xlabel('real part')
 ylabel('imaginary part')
@@ -74,31 +78,20 @@ for n=1+N:length(ryy)
     end
 end
 
-payload=xBBd(end_point:end);
-figure(3)
-hold on
-plot(payload,'b')
-plot(payload,'r.')
-axis('square')
-xlabel('real part')
-ylabel('imaginary part')
-hold off
+preamble=xBBd(1:105+31);
 
-
-preamble=xBBd(1:end_point+1);
-
-single_preamble=preamble(length(preamble)-2*N: length(preamble)-(1*N));
+pilot=preamble(length(preamble)-3*N/2: length(preamble)-N/2);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Adjust Equalizer Weights       %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 w=zeros(N,1);
 e=zeros(N,1);
-mu=0.005;
+mu=0.01;
 for k=1:100000
-        e(k)= s_pilot(mod(k-1,N)+1) - (w'*y_pilot);
-        w = w + 2*mu*conj(e(k))*y_pilot;
-        y_pilot=circshift(y_pilot,-1);
+        e(k)= cp(mod(k-1,N)+1) - (w'*pilot);
+        w = w + 2*mu*conj(e(k))*pilot;
+        pilot=circshift(pilot,-1);
 end
 plot(abs(e));
 plot(abs(w));
@@ -108,12 +101,71 @@ w=circshift(w,(length(w)/2) -i);
 plot(abs(w));
 
 xBBe = conv(xBBd,conj(flip(w)));
-figure(4)
-hold on
-plot(xBBe,'b')
-plot(xBBe,'r.')
-axis('square')
-xlabel('real part')
-ylabel('imaginary part')
+
+figure(5);
+subplot(2,1,1);
+plot(xBBd);
+hold on;
+plot(xBBd, 'xr');
+hold off;
+title('Eye diagram before Equalization')
+subplot(2,1,2)
+plot(xBBe);
+hold on;
+plot(xBBe, 'xr');
+hold off;
+title('Eye diagram after Equalization')
+hold off
+
+figure(6);
+for i=1:length(xBBe)- N
+    xBBe_cp = xBBe(i:i+N-1);
+    ryy_curr = 0;
+    for k=1:N
+        ryy_curr = ryy_curr + xBBe_cp(k)*conj(cp(k));
+    end
+    ryy(i) = ryy_curr;
+end
+plot(abs(ryy));
+[M, I] = max(abs(ryy));
+
+payload=xBBd(I+32:end);
+xBBe_payload = conv(payload,conj(flip(w)));
+figure(5);
+subplot(2,1,1);
+plot(payload);
+hold on;
+plot(payload, 'xr');
+hold off;
+title('Eye diagram before Equalization')
+subplot(2,1,2)
+plot(xBBe_payload);
+hold on;
+plot(xBBe_payload, 'xr');
+hold off;
+title('Eye diagram after Equalization')
+hold off
+
+info_bits = QPSK2bits(payload);
+data = bin2file(info_bits , 'Part2_Output.txt');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Incorrect Timing Phase         %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+xBBd=xBB(4:L:end);
+xBBe = conv(xBBd,conj(flip(w)));
+figure(6);
+subplot(2,1,1);
+plot(xBBd);
+hold on;
+plot(xBBd, 'xr');
+hold off;
+title('Eye diagram before Equalization')
+subplot(2,1,2)
+plot(xBBe);
+hold on;
+plot(xBBe, 'xr');
+hold off;
+title('Eye diagram after Equalization')
 hold off
 

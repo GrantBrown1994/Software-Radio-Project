@@ -1,8 +1,8 @@
 close all;
 clear all;
-% load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');
-% load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');
+load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
 % load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
 % load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
 
@@ -40,7 +40,6 @@ spec_analysis(xBB,1/Ts)
 figure(2)
 hold on
 plot(xBBd,'b')
-plot(xBBd(1:L:end),'r.')
 axis('square')
 xlabel('real part')
 ylabel('imaginary part')
@@ -79,32 +78,19 @@ for n=1+N:length(ryy)
     end
 end
 
-payload=xBBd(end_point:end);
-figure(3)
-hold on
-plot(payload,'b')
-plot(payload,'r.')
-axis('square')
-xlabel('real part')
-ylabel('imaginary part')
-hold off
-
-
-preamble=xBBd(1:end_point+1);
-
-pilot=preamble(length(preamble)-2*N: length(preamble)-(1*N)-1);
-xBBd_pilot=xBBd(length(preamble)-2*N: length(preamble)-(1*N)-1);
+preamble=xBBd(1:end_point+32);
+pilot=preamble(length(preamble)-3*N/2: length(preamble)-N/2 - 1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Adjust Equalizer Weights       %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 w=zeros(N,1);
 e=zeros(N,1);
-mu=0.005;
+mu=0.1;
 for k=1:100000
-        e(k)= pilot(mod(k-1,N)+1) - (w'*xBBd_pilot);
-        w = w + 2*mu*conj(e(k))*xBBd_pilot;
-        xBBd_pilot=circshift(xBBd_pilot,-1);
+        e(k)= cp(mod(k-1,N)+1) - (w'*pilot);
+        w = w + 2*mu*conj(e(k))*pilot;
+        pilot=circshift(pilot,-1);
 end
 plot(abs(e));
 plot(abs(w));
@@ -129,6 +115,38 @@ plot(xBBe, 'xr');
 hold off;
 title('Eye diagram after Equalization')
 hold off
+
+figure(6);
+for i=1:length(xBBe)- N
+    xBBe_cp = xBBe(i:i+N-1);
+    ryy_curr = 0;
+    for k=1:N
+        ryy_curr = ryy_curr + xBBe_cp(k)*conj(cp(k));
+    end
+    ryy(i) = ryy_curr;
+end
+plot(abs(ryy));
+[M, I] = max(abs(ryy));
+
+payload=xBBd(I+32:end);
+xBBe_payload = conv(payload,conj(flip(w)));
+figure(5);
+subplot(2,1,1);
+plot(payload);
+hold on;
+plot(payload, 'xr');
+hold off;
+title('Eye diagram before Equalization')
+subplot(2,1,2)
+plot(xBBe_payload);
+hold on;
+plot(xBBe_payload, 'xr');
+hold off;
+title('Eye diagram after Equalization')
+hold off
+
+info_bits = QPSK2bits(payload);
+data = bin2file(info_bits , 'Part2_Output.txt');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Incorrect Timing Phase         %

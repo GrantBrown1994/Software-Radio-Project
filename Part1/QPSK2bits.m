@@ -6,7 +6,7 @@ function info_bits=QPSK2bits(info_symbols)
     for i=1:L
         detected_symbol = slicer(info_symbols(i), 4);
         switch detected_symbol
-            case -1 - -j
+            case -1 - j
                 info_bits(bit_index) = 0;
                 bit_index = bit_index + 1;
                 info_bits(bit_index) = 0;
