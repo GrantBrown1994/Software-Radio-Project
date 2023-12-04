@@ -4,12 +4,15 @@ close all;
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
+load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+figure('Name', 'CTFT of xRF')
 spec_analysis(xRF,1/Ts)
+title('CTFT of xRF')
+fontsize(16,"points")
 
 phic=0;                 % carrier phase offset
 Dfc=0;                 % carrier frequency offset (unknown to the receiver)
@@ -31,12 +34,14 @@ xBBd=xBB(1:L:end);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of y %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+figure('Name', 'CTFT of xBB')
 spec_analysis(xBB,1/Ts)
+title('CTFT of xBB')
+fontsize(16,"points")
 
-
-%%%%%%%%%%%%%%%%%%%%%%
-%    9.47 Code       %
-%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%    Carrier Aquisition       %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 N=32*L;
 N1 = 40*L;
 N2 = N1 + N;

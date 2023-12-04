@@ -77,21 +77,9 @@ fontsize(16,"points")
 %     Detection of s[n] (pilot)  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 N = 32;
-%%%%%%%%%%%%%%%%%%%%%%
-% Extract Payload   %
-%%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     Detection of s[n] (pilot)  %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-N = 32;
-for k=1:length(xBBd)-4*N
-    ryy(k)=xBBd(k:k+2*N-1)'*xBBd(k+2*N:k+4*N-1);
+for k=1:length(xBBd)-2*N
+    ryy(k)=xBBd(k:k+N-1)'*xBBd(k+N:k+2*N-1);
 end
-figure('Name', 'Auto-Correlation Graph for Pilot Detection')
-plot(abs(ryy));
-title('Auto-Correlation Graph for Pilot Detection')
-fontsize(16,"points")
-
 figure('Name', 'Auto-Correlation Graph for Pilot Detection')
 plot(abs(ryy));
 title('Auto-Correlation Graph for Pilot Detection')
@@ -104,9 +92,9 @@ starting_point=0;
 for n=1+N:length(ryy)
     if preamble_started == false && abs(abs(ryy(n))- abs(ryy(n-N))) <= epsilon
         preamble_started = true;
-        starting_point = n-N;
+        starting_point = n;
     elseif preamble_started == true && abs(abs(ryy(n))- abs(ryy(n-N))) >= epsilon
-        end_point = n-1;
+        end_point = n-1+32;
         break
     end
 end
@@ -173,11 +161,11 @@ title('Decimated Constellation after Equalization')
 fontsize(16,"points")
 hold off
 
-for i=1:length(xBBd)- N
-    xBBd_cp = xBBd(i:i+N-1);
+for i=1:length(xBBe)- N
+    xBBe_cp = xBBe(i:i+N-1);
     rxx_curr = 0;
     for k=1:N
-        rxx_curr = rxx_curr + xBBd_cp(k)*conj(cp(k));
+        rxx_curr = rxx_curr + xBBe_cp(k)*conj(cp(k));
     end
     rxx(i) = rxx_curr;
 end
@@ -185,7 +173,7 @@ figure('Name', 'Cross-Correlation Graph for Pilot Detection')
 plot(abs(rxx));
 title('Cross-Correlation Graph for Pilot Detection')
 fontsize(16,"points")
-[M, I] = maxk(abs(ryy), 4);
+[M, I] = maxk(abs(rxx), 4);
 I = max(I);
 
 payload=xBBd(I+32:end);

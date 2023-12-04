@@ -75,8 +75,8 @@ fontsize(16,"points")
 %     Detection of s[n] (pilot)  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 N = 32;
-for k=1:length(xBBd)-4*N
-    ryy(k)=xBBd(k:k+2*N-1)'*xBBd(k+2*N:k+4*N-1);
+for k=1:length(xBBd)-2*N
+    ryy(k)=xBBd(k:k+N-1)'*xBBd(k+N:k+2*N-1);
 end
 figure('Name', 'Auto-Correlation Graph for Pilot Detection')
 plot(abs(ryy));
@@ -96,7 +96,7 @@ figure('Name', 'Cross-Correlation Graph for Pilot Detection')
 plot(abs(rxx));
 title('Cross-Correlation Graph for Pilot Detection')
 fontsize(16,"points")
-[M, I] = maxk(abs(ryy), 4);
+[M, I] = maxk(abs(rxx), 4);
 I = max(I);
 
 payload=xBBd(I+32:end);
