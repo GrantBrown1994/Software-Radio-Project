@@ -2,9 +2,9 @@ close all;
 clear all;
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
-% load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
-% load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
+load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
@@ -64,7 +64,7 @@ for n=starting:ending
 end
 plot(abs(ryy));
 
-epsilon=0.05;
+epsilon=5;
 preamble_started=false;
 end_point=0;
 starting_point=0;
@@ -78,15 +78,15 @@ for n=1+N:length(ryy)
     end
 end
 
-preamble=xBBd(1:end_point+32);
-pilot=preamble(length(preamble)-3*N/2: length(preamble)-N/2 - 1);
+preamble=xBBd(1:end_point);
+pilot=preamble(length(preamble)-2*N: length(preamble)-N - 1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Adjust Equalizer Weights       %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 w=zeros(N,1);
 e=zeros(N,1);
-mu=0.1;
+mu=0.00005;
 for k=1:100000
         e(k)= cp(mod(k-1,N)+1) - (w'*pilot);
         w = w + 2*mu*conj(e(k))*pilot;
@@ -94,6 +94,18 @@ for k=1:100000
 end
 plot(abs(e));
 plot(abs(w));
+
+% Y = zeros(32,32);
+% for k=1:32
+%     Y(:,k) = pilot;
+%     pilot=circshift(pilot,-1);
+% end
+% Y_H = Y';
+% I = epsilon * eye(32,32);
+% Y_w = Y*Y_H + I;
+% Y_w = inv(Y_w);
+% Y_s = Y*conj(cp);
+% w = Y_w*Y_s;
 
 [m,i] = max(w);
 w=circshift(w,(length(w)/2) -i);
@@ -126,10 +138,12 @@ for i=1:length(xBBe)- N
     ryy(i) = ryy_curr;
 end
 plot(abs(ryy));
-[M, I] = max(abs(ryy));
+[M, I] = maxk(abs(ryy), 4);
+I = max(I);
 
 payload=xBBd(I+32:end);
-xBBe_payload = conv(payload,conj(flip(w)));
+xBBe_payload = conv(xBBd,conj(flip(w)));
+xBBe_payload = xBBe_payload(I+32:end);
 figure(5);
 subplot(2,1,1);
 plot(payload);
@@ -145,7 +159,7 @@ hold off;
 title('Eye diagram after Equalization')
 hold off
 
-info_bits = QPSK2bits(payload);
+info_bits = QPSK2bits(xBBe_payload);
 data = bin2file(info_bits , 'Part2_Output.txt');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

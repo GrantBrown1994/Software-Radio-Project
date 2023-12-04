@@ -29,6 +29,22 @@ xBBd=xBB(1:L:end);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 spec_analysis(xBB,1/Ts)
 
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Find Timing Phase %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+n=450;
+p_t = zeros(4*L, 1);
+j=1;
+for tau=[0:4*L]
+    p_t(j)=mean(sum(abs(xBB(500+tau:L:500+L*n+tau)).^2));
+    j=j+1;
+end
+tau=[0:4*L];
+figure(1)
+plot(tau/Tb, p_t)
+
+
 %%%%%%%%%%%%%%%%%%%%%%
 % DECIMATION         %
 %%%%%%%%%%%%%%%%%%%%%%
