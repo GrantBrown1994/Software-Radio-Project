@@ -75,15 +75,23 @@ fontsize(16,"points")
 %     Detection of s[n] (pilot)  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 N = 32;
-for k=1:length(xBBd)-4*N
-    ryy(k)=xBBd(k:k+2*N-1)'*xBBd(k+2*N:k+4*N-1);
+starting=N+N+2; ending=length(xBBd)-starting;
+i=1;
+for n=starting:ending
+    ryy_curr = 0;
+    for k=0:N
+        ryy_curr = ryy_curr + xBBd(n-k-1)*conj(xBBd(n-N-1-k));
+    end
+    ryy(i) = ryy_curr;
+    i = i+1;
 end
-figure('Name', 'Auto-Correlation Graph for Pilot Detection')
+figure('Name', 'AutoCorrelation Graph for Pilot Detection')
 plot(abs(ryy));
-title('Auto-Correlation Graph for Pilot Detection')
+title('Constellation of xBBd')
 fontsize(16,"points")
 
 
+figure(6);
 for i=1:length(xBBd)- N
     xBBd_cp = xBBd(i:i+N-1);
     rxx_curr = 0;
@@ -92,15 +100,10 @@ for i=1:length(xBBd)- N
     end
     rxx(i) = rxx_curr;
 end
-figure('Name', 'Cross-Correlation Graph for Pilot Detection')
 plot(abs(rxx));
-title('Cross-Correlation Graph for Pilot Detection')
-fontsize(16,"points")
-[M, I] = maxk(abs(ryy), 4);
-I = max(I);
 
-payload=xBBd(I+32:end);
-figure('Name', 'Payload Constellation')
+payload=xBBd(106+31:end);
+figure(3)
 hold on
 plot(payload,'b')
 plot(payload,'xr')
@@ -108,8 +111,6 @@ axis('square')
 xlabel('real part')
 ylabel('imaginary part')
 hold off
-title('Payload Constellation')
-fontsize(16,"points")
 
 info_bits = QPSK2bits(payload);
 data = bin2file(info_bits , 'Part1_Output.txt');
