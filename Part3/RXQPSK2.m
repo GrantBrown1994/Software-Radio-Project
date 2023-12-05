@@ -4,7 +4,8 @@ close all;
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
+load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF7.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
@@ -150,6 +151,7 @@ title('Ensamble Power of xBB')
 fontsize(16,"points")
 
 xBBe = xBBe(1:2:end);
+ryy_curr = zeros(length(xBBe)- N,1);
 for i=1:length(xBBe)- N
     xBBe_cp = xBBe(i:i+N-1);
     ryy_curr = 0;
@@ -165,7 +167,6 @@ fontsize(16,"points")
 [M, I] = maxk(abs(ryy), 4);
 I = max(I);
 
-I=121;
 payload=xBBd(I+32:end);
 xBBe_payload = conv(xBBd,conj(flip(w)));
 xBBe_payload = xBBe_payload(1:2:end);

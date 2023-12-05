@@ -5,9 +5,9 @@ clear all;
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF6.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF6.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF7.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF8.mat');
+load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF8.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
@@ -45,12 +45,12 @@ fontsize(16,"points")
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %    Carrier Aquisition       %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-N=32*L;
-N1 = 40*L;
+N=32;
+N1 = 50;
 N2 = N1 + N;
 J_coarse = 0;
 for n = N1:N2
-    J_coarse = J_coarse + xBB(n+N)*conj(xBB(n));
+    J_coarse = J_coarse + xBBd(n+N)*conj(xBBd(n));
 end
 
 deltaFC_coarse = (1/(2*pi*N*Tb))*angle(J_coarse);
@@ -58,9 +58,8 @@ deltaFC_coarse = (1/(2*pi*N*Tb))*angle(J_coarse);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %    Remove Carrier Offset    %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-t=[0:length(xBB)-1]'*Ts;         % Set the time indices
-xBB=2*exp(-i*(2*pi*deltaFC_coarse)).*xBB;
-xBBd=xBB(1:L:end);
+t=[0:length(xBBd)-1]'*Tb;         % Set the time indices
+xBBd=exp(-i*(2*pi*deltaFC_coarse*t)).*xBBd;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Find Timing Phase %%
@@ -184,6 +183,9 @@ title('Decimated Constellation after Equalization')
 fontsize(16,"points")
 hold off
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Cross Correlation with Pilot    %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for i=1:length(xBBe)- N
     xBBe_cp = xBBe(i:i+N-1);
     rxx_curr = 0;
@@ -219,7 +221,25 @@ title('Payload Constellation after Equalization')
 fontsize(16,"points")
 hold off
 
-info_bits = QPSK2bits(xBBe_payload);
+phi=zeros(size(xBBe_payload)); s1=zeros(size(xBBe_payload)); mu=0.1;
+for n=1:length(xBBe_payload)-1
+    s1(n)=xBBe_payload(n)*exp(-1i*phi(n));
+    s2=sign(real(s1(n)))+1i*sign(imag(s1(n)));
+    s12=s1(n)*s2'; e=imag(s12)/real(s12);
+    phi(n+1)=phi(n)+mu*e;
+    xBBe_phi(n) = s1(n);
+end
+phi_final = phi(end);
+
+figure('Name', 'Constellation After Decision Directed')
+plot(xBBe_phi.');
+hold on;
+plot(xBBe_phi.', 'xr');
+hold off;
+title('Constellation After Decision Directed')
+fontsize(16,"points")
+
+info_bits = QPSK2bits(xBBe_phi.');
 data = bin2file(info_bits , 'Part4_Output.txt');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
