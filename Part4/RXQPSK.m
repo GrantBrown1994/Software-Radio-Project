@@ -231,7 +231,6 @@ for n=1:length(xBBe_payload)-1
     s2=sign(real(s1(n)))+1i*sign(imag(s1(n)));
     s12=s1(n)*s2'; e=imag(s12)/real(s12);
     phi(n+1)=phi(n)+mu*e;
-    xBBe_phi(n) = s1(n);
 end
 xBBe_phi=s1;
 
@@ -243,7 +242,7 @@ hold off;
 title('Constellation After Decision Directed')
 fontsize(16,"points")
 
-info_bits = QPSK2bits(xBBe_phi.');
+info_bits = QPSK2bits(xBBe_phi);
 data = bin2file(info_bits , 'Part4_Output.txt');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
