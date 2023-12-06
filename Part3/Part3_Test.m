@@ -3,18 +3,13 @@ close all;
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF7.mat');
-
+load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-figure('Name', 'CTFT of xRF')
 spec_analysis(xRF,1/Ts)
-title('CTFT of xRF')
-fontsize(16,"points")
 
 phic=0;                 % carrier phase offset
 Dfc=0;                 % carrier frequency offset (unknown to the receiver)
@@ -36,26 +31,20 @@ xBBd=xBB(1:L/2:end);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of y %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-figure('Name', 'CTFT of xBB')
 spec_analysis(xBB,1/Ts)
-title('CTFT of xBB')
-fontsize(16,"points")
 
 
 %%%%%%%%%%%%%%%%%%%%%%
 % DECIMATION         %
 %%%%%%%%%%%%%%%%%%%%%%
 
-figure('Name', 'Constellation of xBBd')
+figure(2)
 hold on
 plot(xBBd,'b')
-plot(xBBd,'r.')
 axis('square')
 xlabel('real part')
 ylabel('imaginary part')
 hold off
-title('Constellation of xBBd')
-fontsize(16,"points")
 
 %%%%%%%%%%%%%%%%%%%%%%
 % Extract Payload   %
@@ -67,9 +56,21 @@ N = 32;
 for k=1:length(xBBd)-4*N
     ryy(k)=xBBd(k:k+2*N-1)'*xBBd(k+2*N:k+4*N-1);
 end
+
+
+% starting=2*N+N+2; ending=length(xBBd)-starting;
+% i=1;
+% for n=starting:ending
+%     ryy_curr = 0;
+%     for k=0:2*N-1
+%         ryy_curr = ryy_curr + xBBd(n-k-1)*conj(xBBd(n-2*N-1-k));
+%     end
+%     ryy(i) = ryy_curr;
+%     i = i+1;
+% end
 plot(abs(ryy));
 
-epsilon=5;
+epsilon=0.05;
 preamble_started=false;
 end_point=0;
 starting_point=0;
@@ -83,56 +84,43 @@ for n=1+N:length(ryy)
     end
 end
 
-preamble=xBBd(1:end_point);
-y_pilot=preamble(length(preamble)-4*N: length(preamble)-2*N - 1);
+preamble=xBBd(1:end_point+2*N);
+y_pilot=preamble(length(preamble)-5*N/2: length(preamble)-N/2 - 1);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Adjust Equalizer Weights       %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 w=zeros(2*N,1);
 e=zeros(2*N,1);
-mu=0.5;
+mu=0.001;
 N=32;
 for k=1:100000
         e(k)= cp(mod(k-1,N)+1) - (w'*y_pilot);
-        w = w + 2*mu*conj(e(k))*y_pilot/(y_pilot'*y_pilot);
+        w = w + 2*mu*conj(e(k))*y_pilot;
         y_pilot=circshift(y_pilot,-2);
 end
-figure('Name', 'Error of Equalization')
 plot(abs(e));
-title('Error of Equalization')
-fontsize(16,"points")
-
-figure('Name', 'Equalizer Weights')
 plot(abs(w));
-title('Equalizer Weights')
-fontsize(16,"points")
 
 [m,i] = max(w);
-shift_length = length(w)/2 -i;
 w=circshift(w,(length(w)/2) -i);
-figure('Name', 'Centered Equalizer Weights')
 plot(abs(w));
-title('Centered Equalizer Weights')
-fontsize(16,"points")
 
 xBBe = conv(xBBd,conj(flip(w)));
 
-figure('Name', 'Decimated vs Equalized Constellations')
+figure(5);
 subplot(2,1,1);
 plot(xBBd);
 hold on;
 plot(xBBd, 'xr');
 hold off;
-title('Decimated Constellation before Equalization')
-fontsize(16,"points")
+title('Eye diagram before Equalization')
 subplot(2,1,2)
 plot(xBBe);
 hold on;
 plot(xBBe, 'xr');
 hold off;
-title('Decimated Constellation after Equalization')
-fontsize(16,"points")
+title('Eye diagram after Equalization')
 hold off
 
 
@@ -147,46 +135,42 @@ for tau=[0:4*L]
     j=j+1;
 end
 tau=[0:4*L];
-figure('Name', 'Ensamble Power of xBB')
+figure(1)
 plot(tau/Tb, p_t)
-title('Ensamble Power of xBB')
-fontsize(16,"points")
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Cross Correlation with Pilot    %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+figure(6);
 xBBe = xBBe(2:2:end);
-ryy = zeros(length(xBBe)- N,1);
 for i=1:length(xBBe)- N
-    ryy(i) = xBBe(i:i+N-1)'*cp(1:32);
+    xBBe_cp = xBBe(i:i+N-1);
+    ryy_curr = 0;
+    for k=1:N
+        ryy_curr = ryy_curr + xBBe_cp(k)*conj(cp(k));
+    end
+    ryy(i) = ryy_curr;
 end
-figure('Name', 'Cross-Correlation Graph for Pilot Detection')
 plot(abs(ryy));
-title('Cross-Correlation Graph for Pilot Detection')
-fontsize(16,"points")
 [M, I] = maxk(abs(ryy), 4);
 I = max(I);
 
+I=121;
 payload=xBBd(I+32:end);
 xBBe_payload = conv(xBBd,conj(flip(w)));
-xBBe_payload = xBBe_payload(2:2:end);
+xBBe_payload = xBBe_payload(1:2:end);
 xBBe_payload = xBBe_payload(I+32:end);
 
-figure('Name', 'Payload vs Equalized Payload Constellation')
+figure(5);
 subplot(2,1,1);
 plot(payload);
 hold on;
 plot(payload, 'xr');
 hold off;
-title('Payload Constellation before Equalization')
-fontsize(16,"points")
+title('Eye diagram before Equalization')
 subplot(2,1,2)
 plot(xBBe_payload);
 hold on;
 plot(xBBe_payload, 'xr');
 hold off;
-title('Payload Constellation after Equalization')
-fontsize(16,"points")
+title('Eye diagram after Equalization')
 hold off
 
 info_bits = QPSK2bits(xBBe_payload);
