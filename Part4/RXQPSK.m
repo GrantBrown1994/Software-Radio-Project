@@ -5,9 +5,9 @@ clear all;
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF6.mat');
+load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF6.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF7.mat');
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF8.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF8.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
@@ -229,12 +229,12 @@ for n=1:length(xBBe_payload)-1
     phi(n+1)=phi(n)+mu*e;
     xBBe_phi(n) = s1(n);
 end
-phi_final = phi(end);
+xBBe_phi=s1;
 
 figure('Name', 'Constellation After Decision Directed')
-plot(xBBe_phi.');
+plot(xBBe_phi);
 hold on;
-plot(xBBe_phi.', 'xr');
+plot(xBBe_phi, 'xr');
 hold off;
 title('Constellation After Decision Directed')
 fontsize(16,"points")
