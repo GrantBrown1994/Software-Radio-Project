@@ -2,10 +2,10 @@ close all;
 clear all;
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
+load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF6.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF6.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF7.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF8.mat');
 
@@ -32,7 +32,26 @@ xbbRF=2*exp(-i*(2*pi*(fc+Dfc)*t-phic)).*xRF;
 %%%%%%%%%%%%%%%%%%%%%%
 pR=pT;    
 xBB=conv(xbbRF,conj(pT));
-xBBd=xBB(1:L:end);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Find Timing Phase %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+n=450;
+p_t = zeros(4*L, 1);
+for tau=[0:4*L]
+    p_t(tau+1)=mean(sum(abs(xBB(500+tau:L:500+L*n+tau)).^2));
+end
+tau=[0:4*L];
+figure('Name', 'Ensamble Power of xBB')
+plot(tau/Tb, p_t)
+title('Ensamble Power of xBB')
+fontsize(16,"points")
+p_t_timing_phase = p_t(1:L/1.5);
+[M, I] = maxk(abs(p_t_timing_phase),4);
+
+
+xBBd=xBB(I:L:end);
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of y %%
@@ -60,22 +79,6 @@ deltaFC_coarse = (1/(2*pi*N*Tb))*angle(J_coarse);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 t=[0:length(xBBd)-1]'*Tb;         % Set the time indices
 xBBd=exp(-i*(2*pi*deltaFC_coarse*t)).*xBBd;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Find Timing Phase %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-n=450;
-p_t = zeros(4*L, 1);
-j=1;
-for tau=[0:4*L]
-    p_t(j)=mean(sum(abs(xBB(500+tau:L:500+L*n+tau)).^2));
-    j=j+1;
-end
-tau=[0:4*L];
-figure('Name', 'Ensamble Power of xBB')
-plot(tau/Tb, p_t)
-title('Ensamble Power of xBB')
-fontsize(16,"points")
 
 %%%%%%%%%%%%%%%%%%%%%%
 % DECIMATION         %
@@ -158,6 +161,7 @@ fontsize(16,"points")
 % w = Y_w*Y_s;
 
 [m,i] = max(w);
+shift_length = length(w)/2 -i;
 w=circshift(w,(length(w)/2) -i);
 figure('Name', 'Centered Equalizer Weights')
 plot(abs(w));

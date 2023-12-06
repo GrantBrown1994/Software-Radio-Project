@@ -1,2 +1,3 @@
-Prove that seven is half of twelve.
-Answer can be found by extracting the content of xRF6ans.mat
+Chemistry teacher: what is H2O?
+Student: ...
+Answer can be found by extracting the content of xRF3ans.mat
