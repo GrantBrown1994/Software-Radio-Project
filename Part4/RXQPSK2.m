@@ -102,7 +102,6 @@ ryy = zeros(length(xBBd),1);
 % for k=1:length(xBBd)-4*N
 %     ryy(k)=xBBd(k:k+2*N-1)'*xBBd(k+2*N:k+4*N-1);
 % end
-i=1;
 for n=4*N+2:length(xBBd)
     ryy_curr = 0;
     for k=0:2*N-1
@@ -114,26 +113,6 @@ figure('Name', 'Auto-Correlation for Pilot Detection')
 plot(abs(ryy));
 title('Auto-Correlation for Pilot Detection')
 fontsize(16,"points")
-% 
-% epsilon=10;
-% preamble_started=false;
-% end_point=0;
-% starting_point=0;
-% for n=1+N:length(ryy)
-%     if preamble_started == false && abs(abs(ryy(n))- abs(ryy(n-N))) <= epsilon
-%         preamble_started = true;
-%         starting_point = n-N;
-%     elseif preamble_started == true && abs(abs(ryy(n))- abs(ryy(n-N))) >= epsilon
-%         end_point = n-1;
-%         break
-%     end
-% end
-
-% for k=1:length(ryy)-2*N
-%     peak(k)=var(ryy(k:k+2*N));
-% end
-% plot(abs(peak));
-% [M, I] = max(abs(peak));
 
 i=1;
 for k=1:length(ryy)
