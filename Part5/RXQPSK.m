@@ -1,6 +1,7 @@
 clear all;
 close all;
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
+load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF9.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
@@ -25,7 +26,31 @@ xbbRF=2*exp(-i*(2*pi*(fc+Dfc)*t-phic)).*xRF;
 %%%%%%%%%%%%%%%%%%%%%%
 pR=pT;    
 xBB=conv(xbbRF,conj(pT));
-xBBd=xBB(1:L:end);
+
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  TIMING RECOVERY: Decision Directed   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+mu=0.05;dtau=6;
+Ly=length(xBB);
+kk=1;
+yp=0;ym=0;
+start=1;
+tau=0.3*ones(1,floor((Ly-start)/L));
+x=tau;
+for k=start:L:length(tau)*L-1
+    tauTb=round(tau(kk)*L); %Moves sample offset to sample value in discrete time
+    sk=slicer(xBB(k+tauTb),4); %moves it to closest constellation point
+    tau(kk+1)=tau(kk)+mu*real(conj(sk-xBB(k+tauTb))*(xBB(k+tauTb+dtau)-xBB(k+tauTb-dtau)));
+    kk=kk+1;
+end
+tau_final=tau(end);
+I=round(abs(tau_final*L));
+figure, axes('position',[0.1 0.25 0.8 0.5]), plot(tau(1:kk-1),'k')
+xlabel('Iteration Number, n'), ylabel('\tau[n]')
+
+xBBd=xBB(I:L:end);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of y %%
@@ -33,23 +58,6 @@ xBBd=xBB(1:L:end);
 figure('Name', 'CTFT of xBB')
 spec_analysis(xBB,1/Ts)
 title('CTFT of xBB')
-fontsize(16,"points")
-
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Find Timing Phase %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-n=450;
-p_t = zeros(4*L, 1);
-j=1;
-for tau=[0:4*L]
-    p_t(j)=mean(sum(abs(xBB(500+tau:L:500+L*n+tau)).^2));
-    j=j+1;
-end
-tau=[0:4*L];
-figure('Name', 'Ensamble Power of xBB')
-plot(tau/Tb, p_t)
-title('Ensamble Power of xBB')
 fontsize(16,"points")
 
 
