@@ -31,14 +31,15 @@ xBB=conv(xbbRF,pT);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Find Timing Phase %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-for tau=[0:4*L]
+for tau=[0:length(xBB)-20*L]
     %p_t(tau+1)=mean(abs(xBB(L+tau:L:length(xBB)-L)).^2);
-    p_t(tau+1)=mean(abs(xBB(500+tau:L:end-500)).^2);
+    p_t(tau+1)=mean(abs(xBB(500+tau:L:end-10*L)).^2);
 end
-figure('Name', 'Ensamble Power of xBB')
-plot(p_t)
-title('Ensamble Power of xBB')
-fontsize(16,"points")
+% tau=[0:4*L];
+% figure('Name', 'Ensamble Power of xBB')
+% plot(tau/Tb, p_t)
+% title('Ensamble Power of xBB')
+% fontsize(16,"points")
 [M, payload_start] = max(p_t);
 payload_start=min(payload_start)-1;
 
@@ -76,26 +77,16 @@ I = (max(I)+N-1)*L;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %  TIMING RECOVERY: Decision Directed   %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-mu=0.01;dtau=6;
+mu=0.00005;dtau=6;
 Ly=length(xBB);
 kk=1;
 yp=0;ym=0;
 start=1;
-tau=0.1*ones(1,floor((Ly-start)/L));
-% for k=I+payload_start:L:length(tau)*L-1
-%     tauTb=round(tau(kk)*L); %Moves sample offset to sample value in discrete time
-%     sk(kk)=slicer(xBB(k+tauTb),4); %moves it to closest constellation point
-%     tau(kk+1)=tau(kk)+mu*real(conj(sk(kk)-xBB(k+tauTb))*(xBB(k+tauTb+dtau)-xBB(k+tauTb-dtau)));
-%     kk=kk+1;
-% end
-
-for k=I+payload_start:L:length(tau)*L-L
-    tauTb=round(tau(kk)*L);
-    if k+tauTb > length(xBB)
-        break
-    end
-    sk(kk)=slicer(xBB(k+tauTb),4);
-    tau(kk+1)=tau(kk)+mu*real((sk(kk)-xBB(k+tauTb))*(xBB(k+tauTb+dtau)-xBB(k+tauTb-dtau))');
+tau=0.01*ones(1,floor((Ly-start)/L));
+for k=I+payload_start:L:length(tau)*L-1
+    tauTb=round(tau(kk)*L); %Moves sample offset to sample value in discrete time
+    sk(kk)=slicer(xBB(k+tauTb),4); %moves it to closest constellation point
+    tau(kk+1)=tau(kk)+mu*real(conj(sk(kk)-xBB(k+tauTb))*(xBB(k+tauTb+dtau)-xBB(k+tauTb-dtau)));
     kk=kk+1;
 end
 tau_final=tau(end);
