@@ -1,0 +1,6 @@
+#Ignore output files
+**/*Output*.txt
+*.txt
+
+#Ignore all .asv files
+**/RXQPSK*.asv
