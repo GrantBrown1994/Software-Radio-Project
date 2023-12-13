@@ -25,7 +25,6 @@ xbbRF=2*exp(-i*(2*pi*(fc+Dfc)*t-phic)).*xRF;
 %%%%%%%%%%%%%%%%%%%%%%
 pR=pT;    
 xBB=conv(xbbRF,conj(pT));
-xBBd=xBB(1:L:end);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of y %%
@@ -39,19 +38,19 @@ fontsize(16,"points")
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Find Timing Phase %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-n=450;
-p_t = zeros(4*L, 1);
-j=1;
-for tau=[0:4*L]
-    p_t(j)=mean(sum(abs(xBB(500+tau:L:500+L*n+tau)).^2));
-    j=j+1;
+for tau=[11*L:17*L]
+     p_t(tau)=mean(abs(xBB(500+tau:L:500+tau+10*L)).^2);
 end
-tau=[0:4*L];
 figure('Name', 'Ensamble Power of xBB')
-plot(tau/Tb, p_t)
+plot(p_t)
 title('Ensamble Power of xBB')
 fontsize(16,"points")
-
+[M, packet_start] = max(p_t);
+packet_start = packet_start - roundn(packet_start,2);
+if packet_start <= 0
+    packet_start = packet_start + 100;
+end
+xBBd=xBB(packet_start:L:end);
 
 %%%%%%%%%%%%%%%%%%%%%%
 % DECIMATION         %
@@ -71,19 +70,7 @@ fontsize(16,"points")
 %%%%%%%%%%%%%%%%%%%%%%
 % Extract Payload   %
 %%%%%%%%%%%%%%%%%%%%%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%     Detection of s[n] (pilot)  %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-N = 32;
-for k=1:length(xBBd)-2*N
-    ryy(k)=xBBd(k:k+N-1)'*xBBd(k+N:k+2*N-1);
-end
-figure('Name', 'Auto-Correlation Graph for Pilot Detection')
-plot(abs(ryy));
-title('Auto-Correlation Graph for Pilot Detection')
-fontsize(16,"points")
-
-
+N=32;
 for i=1:length(xBBd)- N
     xBBd_cp = xBBd(i:i+N-1);
     rxx_curr = 0;
@@ -113,4 +100,16 @@ fontsize(16,"points")
 
 info_bits = QPSK2bits(payload);
 data = bin2file(info_bits , 'Part1_Output.txt');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Incorrect Timing Phase         %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+xBBd=xBB(40:L:end);
+figure('Name', 'Incorrect Timing Phase Constellation')
+plot(xBBd);
+hold on;
+plot(xBBd, 'xr');
+hold off;
+title('Decimated Constellation before Equalization')
+fontsize(16,"points")
 
