@@ -1,7 +1,7 @@
 clear all;
 close all;
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');%
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
 load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
@@ -29,24 +29,6 @@ xbbRF=2*exp(-i*(2*pi*(fc+Dfc)*t-phic)).*xRF;
 %%%%%%%%%%%%%%%%%%%%%%
 pR=pT;    
 xBB=conv(xbbRF,conj(pT));
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Find Timing Phase %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% n=450;
-% p_t = zeros(4*L, 1);
-% for tau=[0:4*L]
-%     p_t(tau+1)=mean(sum(abs(xBB(500+tau:L:500+L*n+tau)).^2));
-% end
-% tau=[0:4*L];
-% figure('Name', 'Ensamble Power of xBB')
-% plot(tau/Tb, p_t)
-% title('Ensamble Power of xBB')
-% fontsize(16,"points")
-% p_t_timing_phase = p_t(1:L/1.5);
-% [M, I] = maxk(abs(p_t_timing_phase),4);
-% I=min(I);
-% % 
 xBBd=xBB(1:L/2:end);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -56,21 +38,6 @@ figure('Name', 'CTFT of xBB')
 spec_analysis(xBB,1/Ts)
 title('CTFT of xBB')
 fontsize(16,"points")
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%    Carrier Aquisition       %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-N=32;
-N1 = 25;
-N2 = N1 + 2*N;
-J_coarse = xBBd(N1:N1+(2*N) -1)'*xBBd(N1+(2*N):N1+(4*N)-1);
-deltaFC_coarse = ((1/(2*pi*N*Tb))*angle(J_coarse))/2;
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%    Remove Carrier Offset    %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-t=(0:length(xBBd)-1)'*Tb;         % Set the time indices
-xBBd=exp(-i*(2*pi*deltaFC_coarse*t)).*xBBd;
 
 
 %%%%%%%%%%%%%%%%%%%%%%
@@ -117,11 +84,12 @@ for k=1:length(ryy)
         i=i+1;
     end
 end
-y_pilot=xBBd(i+30+64-1:-1:i+30);
 
-%preamble=xBBd(I+10:I+10+32-1);
-%y_pilot=preamble(length(preamble)-3*N: length(preamble)-N -1);
-%y_pilot=xBBd(207:-1:144);
+% for k=1:length(ryy)-2*N -1 
+%     var_table(k) = var(ryy(k:k+2*N-1));
+% end
+%plot(var_table);
+y_pilot=xBBd(i+30+2*N-1:-1:i+30);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Adjust Equalizer Weights       %
