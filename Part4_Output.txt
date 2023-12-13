@@ -1,2 +1,0 @@
-Prove that seven is half of twelve.
-Answer can be found by extracting the content of xRF6ans.mat

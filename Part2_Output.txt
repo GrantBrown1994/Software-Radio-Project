@@ -1,3 +1,0 @@
-Chemistry teacher: what is H2O?
-Student: ...
-Answer can be found by extracting the content of xRF3ans.mat
