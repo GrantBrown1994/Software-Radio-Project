@@ -1,10 +1,15 @@
 close all;
 clear all;
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
+load('../CD/xRF1.mat');
+%load('../CD/xRF2.mat');
+%load('../CD/xRF3.mat');
+%load('../CD/xRF4.mat');
+%load('../CD/xRF5.mat');
+
+%load('../CD/xRF2ans.mat');
+%load('../CD/xRF3ans.mat');
+%load('../CD/xRF4ans.mat');
+%load('../CD/xRF5ans.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
@@ -42,7 +47,7 @@ fontsize(16,"points")
 %% Find Timing Phase %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for tau=[11*L:17*L]
-     p_t(tau)=mean(abs(xBB(500+tau:L:500+tau+200*L)).^2);
+     p_t(tau)=mean(abs(xBB(500+tau:L:500+tau+100*L)).^2);
 end
 figure('Name', 'Ensamble Power of xBB')
 plot(p_t)
@@ -173,12 +178,7 @@ hold off
 %% Cross Correlation with Pilot    %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for i=1:length(xBBe)- N
-    xBBe_cp = xBBe(i:i+N-1);
-    rxx_curr = 0;
-    for k=1:N
-        rxx_curr = rxx_curr + xBBe_cp(k)*conj(cp(k));
-    end
-    rxx(i) = rxx_curr;
+    rxx(i)=xBBe(i:i+N-1)'*cp(1:N);
 end
 figure('Name', 'Cross-Correlation Graph for Pilot Detection')
 plot(abs(rxx));
