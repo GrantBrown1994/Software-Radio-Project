@@ -49,11 +49,11 @@ plot(p_t)
 title('Ensamble Power of xBB')
 fontsize(16,"points")
 [M, packet_start] = max(p_t);
-packet_start = packet_start - roundn(packet_start,2);
+packet_start = packet_start - floor(packet_start/100)*100;
 if packet_start <= 0
     packet_start = packet_start + 100;
 end
-timing_phase=50;
+timing_phase=0;
 xBBd=xBB(packet_start+timing_phase:L:end);
 
 %%%%%%%%%%%%%%%%%%%%%%
