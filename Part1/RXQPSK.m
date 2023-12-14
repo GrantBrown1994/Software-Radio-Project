@@ -39,7 +39,7 @@ fontsize(16,"points")
 %% Find Timing Phase %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for tau=[11*L:17*L]
-     p_t(tau)=mean(abs(xBB(500+tau:L:500+tau+10*L)).^2);
+     p_t(tau)=mean(abs(xBB(500+tau:L:500+tau+200*L)).^2);
 end
 figure('Name', 'Ensamble Power of xBB')
 plot(p_t)
