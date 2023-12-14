@@ -1,0 +1,143 @@
+\documentclass[10pt,a4paper]{report}
+\usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{fancyhdr}
+\usepackage{cite}
+\usepackage{framed}
+\usepackage{a4wide}
+\usepackage{float}
+\usepackage{epsfig}
+\usepackage{longtable}
+\usepackage{enumerate}
+\usepackage{afterpage}
+\usepackage{multirow}
+\usepackage{ragged2e}
+\usepackage{gensymb}
+\usepackage{amsfonts} 
+\usepackage[left=1.5cm,top=1.5cm,right=1.5cm,bottom=1.5cm]{geometry}
+\usepackage{setspace}           
+\usepackage{float}
+\usepackage{txfonts}
+\usepackage{lipsum}
+\usepackage{titlesec}
+\usepackage{mathtools}
+\DeclarePairedDelimiter{\abs}{\lvert}{\rvert}
+
+\titlespacing\section{0pt}{12pt plus 4pt minus 2pt}{0pt plus 2pt minus 2pt}
+
+\newcommand{\Usefont}[1]{\fontfamily{#1}\selectfont}
+
+\usepackage{lscape} % for landscape tables
+\renewcommand{\baselinestretch}{1.7} 
+
+\usepackage{blindtext}
+\usepackage{xpatch}
+\usepackage{url}
+\usepackage{leqno}
+\usepackage{subcaption}
+
+\linespread{1.5}
+\usepackage[intoc, english]{nomencl}
+\hyphenpenalty=5000
+\tolerance=1000
+\usepackage[nottoc]{tocbibind}
+
+% ******* References config *********
+\bibliographystyle{IEEEtran}   % On some TeX systems this works
+%\bibliographystyle{ieeetr}      % While on others this works
+							% Uncomment and test if your references don't cite
+							% correctly
+\renewcommand{\bibname}{References}
+
+
+%*********************Figures*****************************
+% Save all figures in the folder figures and include them in your 
+% report using the command \includegraphics{figure-name}
+
+\graphicspath{{figures/}}
+
+% figure files can be in jpeg,jpg, png or pdf formats
+%*******************************************************************
+
+
+\begin{document}
+	
+	
+%****The entries in this section are to be filled in by the student with appropriate values *************
+
+% These values are used thoroughout the report 
+% please fill in the appropriate values in the brackets {}
+
+\gdef \title{Software Radio Fall 2023 Final Project Submission } % Project title
+\gdef \author{Grant Brown}	 %student name
+\gdef \dept{Electronics and Communication Engineering} %Department
+\gdef \college{College of Engineering University of Utah} % Name of the College
+\gdef \collegeplace{Salt Lake City, UT} % Location of the College
+\gdef \studentA{Grant Brown} %Project batch member 1
+
+\gdef \acadyear{2022 - 23} % Academic year
+\gdef \month{December 2023} %Month of Report submission
+\gdef \date{15-12-2023} %Date of signing the declaration
+
+%*******************************************************************
+% The font pages. The source tex files are there in the folder
+\include{coverpage} %Unless essential Do not edit this tex file
+
+
+
+%%********************Body of the report**********
+% Arabic numbering is used in the body of the report
+
+\cleardoublepage
+\setcounter{page}{1}
+\pagenumbering{arabic}
+
+%%********************Abstract**********
+\section{Abstract}\input{sections/abstract}
+
+\vspace{-1.5em}
+%%********************Section 1**********
+\section{Section 1 - Introduction}\input{sections/section1}
+
+\vspace{-1em}
+%%********************Section 2**********
+\section{Section 2 - Demodulation, Timing Acquisition, and Data Extraction}\input{sections/section2}
+
+\vspace{-1em}
+%%********************Section 3**********
+\section{Section 3 - Preamble Detection and Symbol-Spaced Equalizer}\input{sections/section3}
+
+\vspace{-1em}
+%%********************Section 4**********
+\section{Section 4 - Fractionally Spaced Equalizer}\input{sections/section4}
+
+\vspace{-1em}
+%%********************Section 5**********
+\section{Section 5 - Carrier Acquisition and Tracking}\input{sections/section5}
+
+\vspace{-1em}
+%%********************Section 6**********
+\section{Section 6 - Symbol Rate Tracking}\input{sections/section6}
+
+\vspace{-1em}
+%%********************Section 7**********
+\section{Section 7 - Use of equalizer for tracking of carrier offset and timing phase}\input{sections/section7}
+
+\vspace{-1em}
+%%********************Section 6**********
+\section{Conclusion}\input{sections/conclusion}
+
+%%********************Section 6**********
+\newpage
+\section{Figures}\input{sections/figures}
+
+%%********************References**********
+%%****This template uses IEEE bibliography style d
+% The bib file references.bib can be found in the folder. Include the references in the bib file in BibTeX format. A quick video to generate the BibTeX file can be found at   % http://bit.ly/bibtex7
+%
+\bibliography{references}
+\newpage
+
+% Please check the Reference config section (in the preamble) of this file if your references are not cited properly.
+
+\end{document}
