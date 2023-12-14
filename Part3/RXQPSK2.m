@@ -29,7 +29,8 @@ xbbRF=2*exp(-i*(2*pi*(fc+Dfc)*t-phic)).*xRF;
 %%%%%%%%%%%%%%%%%%%%%%
 pR=pT;    
 xBB=conv(xbbRF,conj(pT));
-xBBd=xBB(1:L/2:end);
+timing_phase=0;
+xBBd=xBB(1+timing_phase:L/2:end);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of y %%
@@ -66,7 +67,8 @@ ryy = zeros(length(xBBd),1);
 % for k=1:length(xBBd)-4*N
 %     ryy(k)=xBBd(k:k+2*N-1)'*xBBd(k+2*N:k+4*N-1);
 % end
-for n=4*N+2:length(xBBd)
+for n=4*N+1:length(xBBd)
+    %ryy(n) = 
     ryy_curr = 0;
     for k=0:2*N-1
         ryy_curr = ryy_curr + xBBd(n-k-1)*conj(xBBd(n-2*N-k));
@@ -78,18 +80,29 @@ plot(abs(ryy));
 title('Auto-Correlation for Pilot Detection')
 fontsize(16,"points")
 
-i=1;
-for k=1:length(ryy)
-    while(abs(ryy(i))) == 0
-        i=i+1;
+ryy_start=4*N+1;
+ryy_deriv = abs(conv(ryy, [1 -1]));
+plot(ryy_deriv)
+epsilon = 1;
+flat_top_length=0;
+for k=ryy_start:length(ryy_deriv)
+    if ryy_deriv(k) < epsilon && flat_top_length == 0
+        flat_top_start=k;
+        flat_top_length = 1;
+    elseif  ryy_deriv(k) < epsilon && flat_top_length > 0
+        flat_top_length = flat_top_length + 1;
+    elseif ryy_deriv(k) > epsilon && flat_top_length <= N
+        flat_top_length = 0;
+    elseif ryy_deriv(k) > epsilon && flat_top_length >= N
+        flat_top_end=k;
+        break
     end
 end
 
-% for k=1:length(ryy)-2*N -1 
-%     var_table(k) = var(ryy(k:k+2*N-1));
-% end
-%plot(var_table);
-y_pilot=xBBd(i+30+2*N-1:-1:i+30);
+if mod(flat_top_start, 2) == 1
+    flat_top_start = flat_top_start - 1;
+end
+y_pilot=xBBd(flat_top_start+2*N-1:-1:flat_top_start);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Adjust Equalizer Weights       %
@@ -167,6 +180,8 @@ else
     xBBe_payload = xBBe_payload(2:2:end);
 end
 xBBe_payload = xBBe_payload(I+N:end);
+
+%mean_squared_error = mse(xBBe_payload)
 
 figure('Name', 'Payload vs Equalized Payload Constellation')
 subplot(2,1,1);
