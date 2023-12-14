@@ -1,8 +1,8 @@
 close all;
 clear all;
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF7.mat');
+load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF8.mat');
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');
 %load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF10.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -30,14 +30,6 @@ pR=pT;
 xBB=conv(xbbRF,conj(pT));
 xBBd=xBB(1:L:end);
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Examine Spectral Content of y %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-figure('Name', 'CTFT of xBB')
-spec_analysis(xBB,1/Ts)
-title('CTFT of xBB')
-fontsize(16,"points")
-
 %%%%%%%%%%%%%%%%%%%%%%
 % DECIMATION         %
 %%%%%%%%%%%%%%%%%%%%%%
@@ -60,30 +52,38 @@ fontsize(16,"points")
 %     Detection of s[n] (pilot)  %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 N = 32;
-for k=1:length(xBBd)-2*N
-    ryy(k)=xBBd(k:k+N-1)'*xBBd(k+N:k+2*N-1);
+ryy = zeros(length(xBBd),1);
+% for k=1:length(xBBd)-4*N
+%     ryy(k)=xBBd(k:k+2*N-1)'*xBBd(k+2*N:k+4*N-1);
+% end
+for n=2*N+1:length(xBBd)
+    ryy(n) = xBBd(n-1:-1:n-N)'*xBBd(n-N-1:-1:n-2*N);
 end
-figure('Name', 'Auto-Correlation Graph for Pilot Detection')
+figure('Name', 'Auto-Correlation for Pilot Detection')
 plot(abs(ryy));
-title('Auto-Correlation Graph for Pilot Detection')
+title('Auto-Correlation for Pilot Detection')
 fontsize(16,"points")
 
-epsilon=5;
-preamble_started=false;
-end_point=0;
-starting_point=0;
-for n=1+N:length(ryy)
-    if preamble_started == false && abs(abs(ryy(n))- abs(ryy(n-N))) <= epsilon
-        preamble_started = true;
-        starting_point = n;
-    elseif preamble_started == true && abs(abs(ryy(n))- abs(ryy(n-N))) >= epsilon
-        end_point = n-1+32;
+ryy_start=2*N+1;
+ryy_deriv = abs(conv(ryy, [1 -1]));
+plot(ryy_deriv)
+epsilon = 5;
+flat_top_length=0;
+for k=ryy_start:length(ryy_deriv)
+    if ryy_deriv(k) < epsilon && flat_top_length == 0
+        flat_top_start=k;
+        flat_top_length = 1;
+    elseif  ryy_deriv(k) < epsilon && flat_top_length > 0
+        flat_top_length = flat_top_length + 1;
+    elseif ryy_deriv(k) > epsilon && flat_top_length <= N
+        flat_top_length = 0;
+    elseif ryy_deriv(k) > epsilon && flat_top_length >= N
+        flat_top_end=k;
         break
     end
 end
 
-preamble=xBBd(1:end_point);
-pilot=preamble(length(preamble)-2*N: length(preamble)-N - 1);
+y_pilot=xBBd(flat_top_start+20+N-1:-1:flat_top_start+20);
 
 for k=1:length(xBBd)
     s(k) = slicer(xBBd(k),4);
@@ -131,7 +131,7 @@ plot(abs(w));
 title('Centered Equalizer Weights')
 fontsize(16,"points")
 
-xBBe = conv(xBBd,conj(flip(w)));
+xBBe = conv(xBBd,conj(w));
 
 figure('Name', 'Decimated vs Equalized Constellations')
 subplot(2,1,1);
@@ -166,7 +166,7 @@ fontsize(16,"points")
 I = max(I);
 
 payload=xBBd(I+32:end);
-xBBe_payload = conv(xBBd,conj(flip(w)));
+xBBe_payload = conv(xBBd,conj(w));
 xBBe_payload = xBBe_payload(I+32:end);
 figure('Name', 'Payload vs Equalized Payload Constellation')
 subplot(2,1,1);
@@ -185,28 +185,30 @@ title('Payload Constellation after Equalization')
 fontsize(16,"points")
 hold off
 
-info_bits = QPSK2bits(xBBe_payload);
-data = bin2file(info_bits , 'Part2_Output.txt');
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%  TIMING RECOVERY: Decision Directed   %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+mu=0.01;dtau=6;
+Ly=length(xBBe_payload);
+kk=1;
+yp=0;ym=0;
+start=1;
+tau=0.1*ones(1,floor((Ly-start)));
+for k=I:length(tau)
+    tauTb=round(tau(kk));
+    tauTB_array(kk)=tauTb;
+    if k+tauTb+dtau > length(xBB)
+        break
+    end
+    sk(kk)=slicer(xBB(k+tauTb),4);
+    error = real(sk(kk)-xBB(k+tauTb));
+    tau(kk+1)=tau(kk)+mu*real((sk(kk)-xBB(k+tauTb))*(xBB(k+tauTb+dtau)-xBB(k+tauTb-dtau))');
+    kk=kk+1;
+end
+figure, axes('position',[0.1 0.25 0.8 0.5]), plot(tau(1:kk-1),'k')
+xlabel('Iteration Number, n'), ylabel('\tau[n]')
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Incorrect Timing Phase         %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-xBBd=xBB(4:L:end);
-xBBe = conv(xBBd,conj(flip(w)));
-figure('Name', 'Incorrect Timing Phase Constellation')
-subplot(2,1,1);
-plot(xBBd);
-hold on;
-plot(xBBd, 'xr');
-hold off;
-title('Decimated Constellation before Equalization')
-fontsize(16,"points")
-subplot(2,1,2)
-plot(xBBe);
-hold on;
-plot(xBBe, 'xr');
-hold off;
-title('Decimated Constellation after Equalization')
-fontsize(16,"points")
-hold off
+
+info_bits = QPSK2bits(xBBe_payload);
+data = bin2file(info_bits , 'Part6_Output.txt');
 
