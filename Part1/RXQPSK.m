@@ -1,6 +1,6 @@
 clear all;
 close all;
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
+load('../CD/xRF1.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
@@ -46,11 +46,12 @@ plot(p_t)
 title('Ensamble Power of xBB')
 fontsize(16,"points")
 [M, packet_start] = max(p_t);
-packet_start = packet_start - roundn(packet_start,2);
+packet_start = packet_start - floor(packet_start/100)*100;
 if packet_start <= 0
     packet_start = packet_start + 100;
 end
-xBBd=xBB(packet_start:L:end);
+timing_phase=0;
+xBBd=xBB(packet_start+timing_phase:L:end);
 
 %%%%%%%%%%%%%%%%%%%%%%
 % DECIMATION         %
@@ -72,12 +73,7 @@ fontsize(16,"points")
 %%%%%%%%%%%%%%%%%%%%%%
 N=32;
 for i=1:length(xBBd)- N
-    xBBd_cp = xBBd(i:i+N-1);
-    rxx_curr = 0;
-    for k=1:N
-        rxx_curr = rxx_curr + xBBd_cp(k)*conj(cp(k));
-    end
-    rxx(i) = rxx_curr;
+    rxx(i)=xBBd(i:i+N-1)'*cp(1:N);
 end
 figure('Name', 'Cross-Correlation Graph for Pilot Detection')
 plot(abs(rxx));
@@ -100,16 +96,4 @@ fontsize(16,"points")
 
 info_bits = QPSK2bits(payload);
 data = bin2file(info_bits , 'Part1_Output.txt');
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% Incorrect Timing Phase         %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-xBBd=xBB(40:L:end);
-figure('Name', 'Incorrect Timing Phase Constellation')
-plot(xBBd);
-hold on;
-plot(xBBd, 'xr');
-hold off;
-title('Decimated Constellation before Equalization')
-fontsize(16,"points")
 
