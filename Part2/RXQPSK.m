@@ -1,10 +1,10 @@
 close all;
 clear all;
-load('../CD/xRF1.mat');
+%load('../CD/xRF1.mat');
 %load('../CD/xRF2.mat');
 %load('../CD/xRF3.mat');
 %load('../CD/xRF4.mat');
-%load('../CD/xRF5.mat');
+load('../CD/xRF5.mat');
 
 %load('../CD/xRF2ans.mat');
 %load('../CD/xRF3ans.mat');
@@ -58,7 +58,7 @@ packet_start = packet_start - floor(packet_start/100)*100;
 if packet_start <= 0
     packet_start = packet_start + 100;
 end
-timing_phase=0;
+timing_phase=50;
 xBBd=xBB(packet_start+timing_phase:L:end);
 
 %%%%%%%%%%%%%%%%%%%%%%
@@ -209,3 +209,11 @@ hold off
 
 info_bits = QPSK2bits(xBBe_payload);
 data = bin2file(info_bits , 'Part2_Output.txt');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Mean-Squared Error of Data Symbols    %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+mean_squared_error = mse(xBBe_payload);
+mean_squared_error_mag = abs(mean_squared_error);
+X = sprintf('Mean Sqaured Error is %f+j%f with a magnitude of %d.',real(mean_squared_error),imag(mean_squared_error),mean_squared_error_mag);
+disp(X)
