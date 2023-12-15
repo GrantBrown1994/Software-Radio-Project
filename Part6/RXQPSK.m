@@ -1,10 +1,10 @@
 clear all;
 close all;
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');%
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
+load('../CD/xRF1.mat');
+%load('../CD/xRF2.mat');
+%load('../CD/xRF3.mat');
+%load('../CD/xRF4.mat');
+%load('../CD/xRF5.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
@@ -99,7 +99,7 @@ fontsize(16,"points")
 ryy_start=4*N+1;
 ryy_deriv = abs(conv(ryy, [1 -1]));
 plot(ryy_deriv)
-epsilon = 1;
+epsilon = 4.25;
 flat_top_length=0;
 for k=ryy_start:length(ryy_deriv)
     if ryy_deriv(k) < epsilon && flat_top_length == 0
@@ -236,6 +236,13 @@ title('Centered Equalizer Weights')
 fontsize(16,"points")
 
 xBBe_payload = conv(xBBd_payload,conj(w));
+if mod(shift_length, 2) == 0
+    xBBe_payload = xBBe_payload(1:2:end);
+else 
+    xBBe_payload = xBBe_payload(2:2:end);
+end
+
+
 figure('Name', 'Decimated vs Equalized Constellations')
 subplot(2,1,1);
 plot(xBBd_payload);
