@@ -1,9 +1,10 @@
-close all;
 clear all;
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF8.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF10.mat');
+close all;
+load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');%
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
+%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
@@ -28,7 +29,33 @@ xbbRF=2*exp(-i*(2*pi*(fc+Dfc)*t-phic)).*xRF;
 %%%%%%%%%%%%%%%%%%%%%%
 pR=pT;    
 xBB=conv(xbbRF,conj(pT));
-xBBd=xBB(1:L:end);
+timing_phase=0;
+xBBd=xBB(1+timing_phase:L/2:end);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Examine Spectral Content of y %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+figure('Name', 'CTFT of xBB')
+spec_analysis(xBB,1/Ts)
+title('CTFT of xBB')
+fontsize(16,"points")
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%    Carrier Aquisition       %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+N=32;
+N1 = 25;
+N2 = N1 + 4*N;
+J_coarse = xBBd(N1:N1+(2*N) -1)'*xBBd(N1+(2*N):N1+(4*N)-1);
+deltaFC_coarse = ((1/(2*pi*2*N*Tb))*angle(J_coarse));
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%    Remove Carrier Offset    %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+t=(0:length(xBBd)-1)'*Tb;         % Set the time indices
+xBBd=exp(-i*(2*pi*deltaFC_coarse*t)).*xBBd;
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%
 % DECIMATION         %
@@ -56,18 +83,23 @@ ryy = zeros(length(xBBd),1);
 % for k=1:length(xBBd)-4*N
 %     ryy(k)=xBBd(k:k+2*N-1)'*xBBd(k+2*N:k+4*N-1);
 % end
-for n=2*N+1:length(xBBd)
-    ryy(n) = xBBd(n-1:-1:n-N)'*xBBd(n-N-1:-1:n-2*N);
+for n=4*N+1:length(xBBd)
+    %ryy(n) = 
+    ryy_curr = 0;
+    for k=0:2*N-1
+        ryy_curr = ryy_curr + xBBd(n-k-1)*conj(xBBd(n-2*N-k));
+    end
+    ryy(n) = ryy_curr;
 end
 figure('Name', 'Auto-Correlation for Pilot Detection')
 plot(abs(ryy));
 title('Auto-Correlation for Pilot Detection')
 fontsize(16,"points")
 
-ryy_start=2*N+1;
+ryy_start=4*N+1;
 ryy_deriv = abs(conv(ryy, [1 -1]));
 plot(ryy_deriv)
-epsilon = 5;
+epsilon = 1;
 flat_top_length=0;
 for k=ryy_start:length(ryy_deriv)
     if ryy_deriv(k) < epsilon && flat_top_length == 0
@@ -83,41 +115,27 @@ for k=ryy_start:length(ryy_deriv)
     end
 end
 
-y_pilot=xBBd(flat_top_start+20+N-1:-1:flat_top_start+20);
-
-for k=1:length(xBBd)
-    s(k) = slicer(xBBd(k),4);
+if mod(flat_top_start, 2) == 1
+    flat_top_start = flat_top_start - 1;
 end
+y_pilot=xBBd(flat_top_start+2*N-1:-1:flat_top_start);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Adjust Equalizer Weights       %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-N1=31;          % Equalizer order
-c=[1];
-Delta=round((N+(length(c)+2*length(pT))/L)/2);
-w=zeros(N,1); nn=1;
-Psi_inv=10000*eye(N);
-lambda=0.95;
-for n=N:length(xBBd)-Delta
-    tdl=xBBd(n:-1:n-N1);
-    u=Psi_inv*tdl;
-    k=u/(lambda+tdl'*u);
-    x(n)=w'*tdl;
-    e=s(n-Delta)-x(n);
-    w=w+k*e';
-    Psi_inv=(1/lambda)*(Psi_inv-k*(tdl'*Psi_inv));
-    xi(nn)=abs(e)^2;
-    nn=nn+1;
-    if rem(n,100)==0 
-        figure(1),plot(x(n-99:n),'.'),pause(0.1) 
-    end
+w=zeros(2*N,1);
+e=zeros(2*N,1);
+mu=0.1;
+N=32;
+for k=1:100000
+        e(k)= cp(mod(k-1,N)+1) - (w'*y_pilot);
+        w = w + 2*mu*conj(e(k))*y_pilot/(y_pilot'*y_pilot);
+        y_pilot=circshift(y_pilot,-2);
 end
-figure(2),semilogy(xi)
-
-% figure('Name', 'Error of Equalization')
-% plot(abs(e));
-% title('Error of Equalization')
-% fontsize(16,"points")
+figure('Name', 'Error of Equalization')
+plot(abs(e));
+title('Error of Equalization')
+fontsize(16,"points")
 
 figure('Name', 'Equalizer Weights')
 plot(abs(w));
@@ -125,6 +143,7 @@ title('Equalizer Weights')
 fontsize(16,"points")
 
 [m,i] = max(w);
+shift_length = length(w)/2 -i;
 w=circshift(w,(length(w)/2) -i);
 figure('Name', 'Centered Equalizer Weights')
 plot(abs(w));
@@ -150,65 +169,89 @@ title('Decimated Constellation after Equalization')
 fontsize(16,"points")
 hold off
 
-for i=1:length(xBBe)- N
-    xBBe_cp = xBBe(i:i+N-1);
-    rxx_curr = 0;
-    for k=1:N
-        rxx_curr = rxx_curr + xBBe_cp(k)*conj(cp(k));
-    end
-    rxx(i) = rxx_curr;
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Cross Correlation with Pilot    %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if mod(shift_length, 2) == 0
+    xBBe = xBBe(1:2:end);
+else 
+    xBBe = xBBe(2:2:end);
+end
+ryy = zeros(length(xBBe)- N,1);
+for k=1:length(xBBe)- N
+    ryy(k) = xBBe(k:k+N-1)'*cp(1:32);
 end
 figure('Name', 'Cross-Correlation Graph for Pilot Detection')
-plot(abs(rxx));
+plot(abs(ryy));
 title('Cross-Correlation Graph for Pilot Detection')
 fontsize(16,"points")
-[M, I] = maxk(abs(rxx), 4);
+[M, I] = maxk(abs(ryy), 4);
 I = max(I);
 
-payload=xBBd(I+32:end);
-xBBe_payload = conv(xBBd,conj(w));
-xBBe_payload = xBBe_payload(I+32:end);
-figure('Name', 'Payload vs Equalized Payload Constellation')
+xBBd_payload = xBBd(I+32:end);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Adjust Equalizer Weights       %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+N1=31;          % Equalizer order
+c=[1];
+nn=1;
+Psi_inv=10000*eye(N);
+lambda=0.75;
+Delta=round((N1/2+(length(c)+length(pT))/L)/2);
+w=w(1:2:end);
+for n=N:2:length(xBBd_payload)-N
+    tdl=xBBd_payload(n:-1:n-N+1);
+    u=Psi_inv*tdl;
+    k=u/(lambda+tdl'*u);
+    x(n)=w'*tdl;
+    s(n) = slicer(x(n),4);
+    e=s(n)-x(n);
+    w=w+k*e';
+    Psi_inv=(1/lambda)*(Psi_inv-k*(tdl'*Psi_inv));
+    xi(nn)=abs(e)^2;
+    nn=nn+1;
+    if rem(n,100)==0 
+        figure(1),plot(x(n-99:n),'.'),pause(0.1) 
+    end
+end
+figure(2),semilogy(xi)
+
+% figure('Name', 'Error of Equalization')
+% plot(abs(e));
+% title('Error of Equalization')
+% fontsize(16,"points")
+
+figure('Name', 'Equalizer Weights')
+plot(abs(w));
+title('Equalizer Weights')
+fontsize(16,"points")
+
+[m,i] = max(w);
+shift_length = length(w)/2 -i;
+w=circshift(w,(length(w)/2) -i);
+figure('Name', 'Centered Equalizer Weights')
+plot(abs(w));
+title('Centered Equalizer Weights')
+fontsize(16,"points")
+
+xBBe_payload = conv(xBBd_payload,conj(w));
+figure('Name', 'Decimated vs Equalized Constellations')
 subplot(2,1,1);
-plot(payload);
+plot(xBBd_payload);
 hold on;
-plot(payload, 'xr');
+plot(xBBd_payload, 'xr');
 hold off;
-title('Payload Constellation before Equalization')
+title('Decimated Constellation before Equalization')
 fontsize(16,"points")
 subplot(2,1,2)
 plot(xBBe_payload);
 hold on;
 plot(xBBe_payload, 'xr');
 hold off;
-title('Payload Constellation after Equalization')
+title('Decimated Constellation after Equalization')
 fontsize(16,"points")
 hold off
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%  TIMING RECOVERY: Decision Directed   %
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-mu=0.01;dtau=6;
-Ly=length(xBBe_payload);
-kk=1;
-yp=0;ym=0;
-start=1;
-tau=0.1*ones(1,floor((Ly-start)));
-for k=I:length(tau)
-    tauTb=round(tau(kk));
-    tauTB_array(kk)=tauTb;
-    if k+tauTb+dtau > length(xBB)
-        break
-    end
-    sk(kk)=slicer(xBB(k+tauTb),4);
-    error = real(sk(kk)-xBB(k+tauTb));
-    tau(kk+1)=tau(kk)+mu*real((sk(kk)-xBB(k+tauTb))*(xBB(k+tauTb+dtau)-xBB(k+tauTb-dtau))');
-    kk=kk+1;
-end
-figure, axes('position',[0.1 0.25 0.8 0.5]), plot(tau(1:kk-1),'k')
-xlabel('Iteration Number, n'), ylabel('\tau[n]')
-
-
 info_bits = QPSK2bits(xBBe_payload);
-data = bin2file(info_bits , 'Part6_Output.txt');
-
+data = bin2file(info_bits , 'Part6_Output_Fractional.txt');
