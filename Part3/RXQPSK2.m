@@ -34,7 +34,7 @@ xbbRF=2*exp(-i*(2*pi*(fc+Dfc)*t-phic)).*xRF;
 %%%%%%%%%%%%%%%%%%%%%%
 pR=pT;    
 xBB=conv(xbbRF,conj(pT));
-timing_phase=50;
+timing_phase=0;
 xBBd=xBB(1+timing_phase:L/2:end);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
