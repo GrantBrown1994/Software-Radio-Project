@@ -1,10 +1,15 @@
 clear all;
 close all;
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');%
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
+load('../CD/xRF1.mat');
+%load('../CD/xRF2.mat');
+%load('../CD/xRF3.mat');
+%load('../CD/xRF4.mat');
+%load('../CD/xRF5.mat');
+
+%load('../CD/xRF2ans.mat');
+%load('../CD/xRF3ans.mat');
+%load('../CD/xRF4ans.mat');
+%load('../CD/xRF5ans.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
@@ -29,7 +34,7 @@ xbbRF=2*exp(-i*(2*pi*(fc+Dfc)*t-phic)).*xRF;
 %%%%%%%%%%%%%%%%%%%%%%
 pR=pT;    
 xBB=conv(xbbRF,conj(pT));
-timing_phase=0;
+timing_phase=50;
 xBBd=xBB(1+timing_phase:L/2:end);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -68,7 +73,6 @@ ryy = zeros(length(xBBd),1);
 %     ryy(k)=xBBd(k:k+2*N-1)'*xBBd(k+2*N:k+4*N-1);
 % end
 for n=4*N+1:length(xBBd)
-    %ryy(n) = 
     ryy_curr = 0;
     for k=0:2*N-1
         ryy_curr = ryy_curr + xBBd(n-k-1)*conj(xBBd(n-2*N-k));
@@ -181,8 +185,6 @@ else
 end
 xBBe_payload = xBBe_payload(I+N:end);
 
-%mean_squared_error = mse(xBBe_payload)
-
 figure('Name', 'Payload vs Equalized Payload Constellation')
 subplot(2,1,1);
 plot(payload);
@@ -202,3 +204,11 @@ hold off
 
 info_bits = QPSK2bits(xBBe_payload);
 data = bin2file(info_bits , 'Part3_Fractional.txt');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Mean-Squared Error of Data Symbols    %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+mean_squared_error = mse(xBBe_payload);
+mean_squared_error_mag = abs(mean_squared_error);
+X = sprintf('Mean Sqaured Error is %f+j%f with a magnitude of %d.',real(mean_squared_error),imag(mean_squared_error),mean_squared_error_mag);
+disp(X)
