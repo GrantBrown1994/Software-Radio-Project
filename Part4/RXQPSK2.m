@@ -1,13 +1,19 @@
 clear all;
 close all;
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF6.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF7.mat');
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF8.mat');
+load('../CD/xRF1.mat');
+%load('../CD/xRF2.mat');
+%load('../CD/xRF3.mat');
+%load('../CD/xRF4.mat');
+%load('../CD/xRF5.mat');
+%load('../CD/xRF6.mat');
+%load('../CD/xRF7.mat');
+%load('../CD/xRF8.mat');
+
+%load('../CD/xRF2ans.mat');
+%load('../CD/xRF3ans.mat');
+%load('../CD/xRF4ans.mat');
+%load('../CD/xRF5ans.mat');
+%load('../CD/xRF6ans.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
@@ -32,25 +38,8 @@ xbbRF=2*exp(-i*(2*pi*(fc+Dfc)*t-phic)).*xRF;
 %%%%%%%%%%%%%%%%%%%%%%
 pR=pT;    
 xBB=conv(xbbRF,conj(pT));
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Find Timing Phase %%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% n=450;
-% p_t = zeros(4*L, 1);
-% for tau=[0:4*L]
-%     p_t(tau+1)=mean(sum(abs(xBB(500+tau:L:500+L*n+tau)).^2));
-% end
-% tau=[0:4*L];
-% figure('Name', 'Ensamble Power of xBB')
-% plot(tau/Tb, p_t)
-% title('Ensamble Power of xBB')
-% fontsize(16,"points")
-% p_t_timing_phase = p_t(1:L/1.5);
-% [M, I] = maxk(abs(p_t_timing_phase),4);
-% I=min(I);
-% % 
-xBBd=xBB(1:L/2:end);
+timing_phase=0;
+xBBd=xBB(1+timing_phase:L/2:end);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of y %%
@@ -65,9 +54,9 @@ fontsize(16,"points")
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 N=32;
 N1 = 25;
-N2 = N1 + 2*N;
+N2 = N1 + 4*N;
 J_coarse = xBBd(N1:N1+(2*N) -1)'*xBBd(N1+(2*N):N1+(4*N)-1);
-deltaFC_coarse = ((1/(2*pi*N*Tb))*angle(J_coarse))/2;
+deltaFC_coarse = ((1/(2*pi*2*N*Tb))*angle(J_coarse));
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %    Remove Carrier Offset    %
@@ -102,7 +91,7 @@ ryy = zeros(length(xBBd),1);
 % for k=1:length(xBBd)-4*N
 %     ryy(k)=xBBd(k:k+2*N-1)'*xBBd(k+2*N:k+4*N-1);
 % end
-for n=4*N+2:length(xBBd)
+for n=4*N+1:length(xBBd)
     ryy_curr = 0;
     for k=0:2*N-1
         ryy_curr = ryy_curr + xBBd(n-k-1)*conj(xBBd(n-2*N-k));
@@ -114,17 +103,30 @@ plot(abs(ryy));
 title('Auto-Correlation for Pilot Detection')
 fontsize(16,"points")
 
-i=1;
-for k=1:length(ryy)
-    while(abs(ryy(i))) == 0
-        i=i+1;
+
+ryy_start=4*N+1;
+ryy_deriv = abs(conv(ryy, [1 -1]));
+plot(ryy_deriv)
+epsilon = 4.25;
+flat_top_length=0;
+for k=ryy_start:length(ryy_deriv)
+    if ryy_deriv(k) < epsilon && flat_top_length == 0
+        flat_top_start=k;
+        flat_top_length = 1;
+    elseif  ryy_deriv(k) < epsilon && flat_top_length > 0
+        flat_top_length = flat_top_length + 1;
+    elseif ryy_deriv(k) > epsilon && flat_top_length <= N
+        flat_top_length = 0;
+    elseif ryy_deriv(k) > epsilon && flat_top_length >= N
+        flat_top_end=k;
+        break
     end
 end
-y_pilot=xBBd(i+30+64-1:-1:i+30);
 
-%preamble=xBBd(I+10:I+10+32-1);
-%y_pilot=preamble(length(preamble)-3*N: length(preamble)-N -1);
-%y_pilot=xBBd(207:-1:144);
+if mod(flat_top_start, 2) == 1
+    flat_top_start = flat_top_start - 1;
+end
+y_pilot=xBBd(flat_top_start+2*N-1:-1:flat_top_start);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Adjust Equalizer Weights       %
