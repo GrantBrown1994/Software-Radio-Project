@@ -1,13 +1,19 @@
 clear all;
 close all;
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF2.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF3.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF4.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF5.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF6.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF7.mat');
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF8.mat');
+load('../CD/xRF1.mat');
+%load('../CD/xRF2.mat');
+%load('../CD/xRF3.mat');
+%load('../CD/xRF4.mat');
+%load('../CD/xRF5.mat');
+%load('../CD/xRF6.mat');
+%load('../CD/xRF7.mat');
+%load('../CD/xRF8.mat');
+
+%load('../CD/xRF2ans.mat');
+%load('../CD/xRF3ans.mat');
+%load('../CD/xRF4ans.mat');
+%load('../CD/xRF5ans.mat');
+%load('../CD/xRF6ans.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
@@ -101,7 +107,7 @@ fontsize(16,"points")
 ryy_start=4*N+1;
 ryy_deriv = abs(conv(ryy, [1 -1]));
 plot(ryy_deriv)
-epsilon = 3.75;
+epsilon = 4.25;
 flat_top_length=0;
 for k=ryy_start:length(ryy_deriv)
     if ryy_deriv(k) < epsilon && flat_top_length == 0
