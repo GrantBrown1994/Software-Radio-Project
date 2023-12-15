@@ -1,7 +1,7 @@
 clear all;
 close all;
-%load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF1.mat');
-load('/Users/grantbrown/Library/Mobile Documents/com~apple~CloudDocs/Documents_UofU/Software Radio/CD/xRF9.mat');
+%load('../CD/xRF1.mat');
+load('../CD/xRF9.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%
@@ -39,14 +39,14 @@ fontsize(16,"points")
 %% Find Timing Phase %%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 for tau=[11*L:17*L]
-    p_t(tau)=mean(abs(xBB(500+tau:L:500+tau+200*L)).^2);
+    p_t(tau)=mean(abs(xBB(500+tau:L:500+tau+100*L)).^2);
 end
 figure('Name', 'Ensamble Power of xBB')
 plot(p_t)
 title('Ensamble Power of xBB')
 fontsize(16,"points")
 [M, packet_start] = max(p_t);
-packet_start = packet_start - roundn(packet_start,2);
+packet_start = packet_start - floor(packet_start/100)*100;
 if packet_start < 0
     packet_start = packet_start + 100;
 end
