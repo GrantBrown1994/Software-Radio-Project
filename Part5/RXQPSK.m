@@ -1,7 +1,7 @@
 clear all;
 close all;
-%load('../CD/xRF1.mat');
-load('../CD/xRF9.mat');
+load('../CD/xRF1.mat');
+%load('../CD/xRF9.mat');
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Examine Spectral Content of xRF %%

@@ -1,10 +1,10 @@
 close all;
 clear all;
-%load('../CD/xRF1.mat');
+load('../CD/xRF1.mat');
 %load('../CD/xRF2.mat');
 %load('../CD/xRF3.mat');
 %load('../CD/xRF4.mat');
-load('../CD/xRF5.mat');
+%load('../CD/xRF5.mat');
 
 %load('../CD/xRF2ans.mat');
 %load('../CD/xRF3ans.mat');
@@ -58,7 +58,7 @@ packet_start = packet_start - floor(packet_start/100)*100;
 if packet_start <= 0
     packet_start = packet_start + 100;
 end
-timing_phase=50;
+timing_phase=0;
 xBBd=xBB(packet_start+timing_phase:L:end);
 
 %%%%%%%%%%%%%%%%%%%%%%
